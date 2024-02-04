@@ -12,6 +12,13 @@ pm有一些依赖,请自行安装:
 sudo apt-get install git xclip
 ```
 
+如果你安装了go,可以直接使用go install安装:
+```bash
+go install github.com/yangchnet/pm@latest
+```
+
+或直接从release下载二进制文件
+
 ## Usage
 
 1. 在任意的git-server上创建一个私有仓库(github, gitlab, gitee等),并复制仓库的ssh地址:例如:`git@github.com/yangchnet/pass.git`
