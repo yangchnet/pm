@@ -8,4 +8,6 @@ func init() {
 	RootCmd.AddCommand(GenerateCmd())
 	RootCmd.AddCommand(GetCmd())
 	RootCmd.AddCommand(PushCmd())
+	RootCmd.AddCommand(PullCmd())
+	RootCmd.AddCommand(InitCmd())
 }

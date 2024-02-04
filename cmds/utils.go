@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -32,16 +33,20 @@ func needPrimaryKeyInput() (string, bool) {
 
 	content, err := os.ReadFile(config.GetString("userKeyPath"))
 	if err != nil {
-		panic("user key not found")
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	list := strings.Split(string(content), " ")
 	if len(list) != 2 {
-		panic("user key format error")
+		fmt.Println("user key file format error")
+		os.Exit(1)
 	}
+
 	timestamp, err := strconv.ParseInt(list[1], 10, 64)
 	if err != nil {
-		panic(err)
+		fmt.Println("user key file format error")
+		os.Exit(1)
 	}
 
 	lastInputKeyTime := time.Unix(timestamp, 0)
@@ -59,7 +64,8 @@ func inputAndSavePrimaryKey() string {
 	fmt.Println("Please input your primary password:")
 	primaryKeyByte, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	return savePrimaryKey(primaryKeyByte)
@@ -86,4 +92,15 @@ func savePrimaryKey(primaryKeyByte []byte) string {
 	}
 
 	return hashString
+}
+
+func extractGitInfo(gitURL string) (string, string, string, error) {
+	re := regexp.MustCompile(`^git@(.*):(.*)/(.*).git$`)
+	matches := re.FindStringSubmatch(gitURL)
+
+	if len(matches) != 4 {
+		return "", "", "", fmt.Errorf("git url格式不对")
+	}
+
+	return matches[1], matches[2], matches[3], nil
 }

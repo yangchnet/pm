@@ -1,17 +1,25 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	c "github.com/spf13/viper"
 )
 
-func init() {
-	c.SetConfigName("conf")                                 // 配置文件的名称（不需要扩展名）
-	c.AddConfigPath("/home/lc/dev/github.com/yangchnet/pm") // 配置文件的路径
-
-	err := c.ReadInConfig() // 读取配置数据
+func InitConfig() {
+	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("Error reading config file, %s", err)
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	c.SetConfigName("conf")                      // 配置文件的名称（不需要扩展名）
+	c.AddConfigPath(filepath.Join(home, ".pm/")) // 配置文件的路径
+
+	// 读取配置数据
+	if err := c.ReadInConfig(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

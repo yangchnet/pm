@@ -7,9 +7,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
+	"github.com/yangchnet/pm/config"
 	"github.com/yangchnet/pm/store"
-	"golang.design/x/clipboard"
 )
 
 func GenerateCmd() *cobra.Command {
@@ -25,12 +26,8 @@ func GenerateCmd() *cobra.Command {
 		Short: "generate a new password for [name]",
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
+			config.InitConfig()
 			password := generatePassword(12)
-			err := clipboard.Init()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
 
 			primaryKey := GetPrimaryKey()
 
@@ -46,12 +43,19 @@ func GenerateCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			if err := service.store.Save(ctx, name, url, account, cryptedPasswd, note); err != nil {
+			passwd := store.Passwd{
+				Name:          name,
+				Url:           url,
+				UserName:      account,
+				Note:          note,
+				CryptedPasswd: cryptedPasswd,
+			}
+			if err := service.store.Save(ctx, &passwd); err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
 
-			clipboard.Write(clipboard.FmtText, []byte(password))
+			clipboard.WriteAll(password)
 		},
 	}
 

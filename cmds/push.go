@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/yangchnet/pm/config"
 )
 
 func PushCmd() *cobra.Command {
@@ -15,6 +16,7 @@ func PushCmd() *cobra.Command {
 		Short: "push passwd store to remote",
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
+			config.InitConfig()
 
 			service, err := NewService(ctx)
 			if err != nil {

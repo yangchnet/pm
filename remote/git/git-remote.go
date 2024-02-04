@@ -4,11 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/yangchnet/pm/config"
 
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
@@ -48,6 +50,31 @@ func NewGitRemote(
 	}, nil
 }
 
+// Init 初始化remote
+func (gr *GitRemote) Init(ctx context.Context) error {
+	r, err := git.PlainClone(config.GetString("local.path"), false, &git.CloneOptions{
+		URL:               config.GetString("remote.git.url"),
+		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+		Auth:              gr.auth,
+	})
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	ref, err := r.Head()
+	if err != nil {
+		return err
+	}
+	_, err = r.CommitObject(ref.Hash())
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	return nil
+}
+
 // Push 将本地的store文件推送到远端
 func (gr *GitRemote) Push(ctx context.Context) error {
 
@@ -85,10 +112,6 @@ func (gr *GitRemote) Pull(ctx context.Context) error {
 	}); err != nil && !errors.Is(git.NoErrAlreadyUpToDate, err) {
 		return err
 	}
-
-	// if errors.Is(git.NoErrAlreadyUpToDate, err) {
-	// 	return nil
-	// }
 
 	return nil
 }

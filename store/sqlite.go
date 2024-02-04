@@ -28,14 +28,8 @@ func NewSqliteStore(ctx context.Context) *SqliteStore {
 }
 
 // Save 在使用cryptFunc对密码密文进行存储
-func (s *SqliteStore) Save(ctx context.Context, name, url, username string, cryptedPasswd []byte, note string) error {
-	return s.db.Save(&Passwd{
-		Name:          name,
-		Url:           url,
-		UserName:      username,
-		Note:          note,
-		CryptedPasswd: cryptedPasswd,
-	}).Error
+func (s *SqliteStore) Save(ctx context.Context, passwd *Passwd) error {
+	return s.db.Save(passwd).Error
 }
 
 // Get 获取密码密文

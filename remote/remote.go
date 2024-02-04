@@ -14,6 +14,9 @@ type Remote interface {
 
 	// Pull 将远端的store文件拉取到本地
 	Pull(ctx context.Context) error
+
+	// Init 初始化remote
+	Init(ctx context.Context) error
 }
 
 func NewRemote(ctx context.Context) (Remote, error) {

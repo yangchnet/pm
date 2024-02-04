@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"text/tabwriter"
 
+	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
+	"github.com/yangchnet/pm/config"
 	"github.com/yangchnet/pm/store"
-	"golang.design/x/clipboard"
 )
 
 func GetCmd() *cobra.Command {
@@ -17,11 +19,7 @@ func GetCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			err := clipboard.Init()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+			config.InitConfig()
 
 			service, err := NewService(ctx)
 			if err != nil {
@@ -43,12 +41,18 @@ func GetCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			clipboard.Write(clipboard.FmtText, []byte(decryptPasswd))
-			fmt.Printf("Name: %s; Account: %s; Url: %s; Note: %s;\n 密码已复制到剪贴板！", passwd.Name, passwd.UserName, passwd.Url, passwd.Note)
-			fmt.Println(string(decryptPasswd))
+			if err := clipboard.WriteAll(string(decryptPasswd)); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			tabPrint(passwd)
+
+			fmt.Println("密码已复制到剪贴板")
 		},
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			ctx := context.Background()
+			config.InitConfig()
 			service, err := NewService(ctx)
 			if err != nil {
 				fmt.Println(err)
@@ -66,4 +70,20 @@ func GetCmd() *cobra.Command {
 	}
 
 	return getCmd
+}
+
+func tabPrint(passwd *store.Passwd) {
+	// Initialize a tabwriter
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+
+	// Write the headers
+	fmt.Fprintln(w, "Name\tAccount\tUrl\tNote")
+
+	fmt.Fprintln(w, "---\t---\t---\t---")
+
+	// Write some data
+	fmt.Fprintln(w, fmt.Sprintf("%s\t%s\t%s\t%s", passwd.Name, passwd.UserName, passwd.Url, passwd.Note))
+
+	// Flush the writer to output the table
+	w.Flush()
 }
