@@ -26,10 +26,9 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --config .github/workflows/.goreleaser-for-linux.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
 
@@ -56,7 +55,7 @@ jobs:
           # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --config .github/workflows/.goreleaser-for-darwin.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
 
@@ -74,16 +73,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+          version: 12.2.0
+
       - name: Set up Go
         uses: actions/setup-go@v4
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --config .github/workflows/.goreleaser-for-windows.yml
         env:
           CGO_ENABLE: 1
           GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}

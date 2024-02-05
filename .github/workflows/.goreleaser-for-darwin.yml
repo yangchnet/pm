@@ -1,0 +1,21 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: pm
+    main: .
+    binary: pm
+    ldflags:
+      - -w -s
+    tags:
+      - release
+      - embed_frontend
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+checksum:
+  disable: true
