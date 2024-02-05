@@ -86,7 +86,7 @@ func (gr *GitRemote) Init(ctx context.Context) (string, error) {
 		utils.CreateDirIfNotExist(sshDir)
 
 		privateKeyPath = filepath.Join(sshDir, "pm")
-		sshCmd := exec.Command("ssh-keygen", "-t", "rsa", "-b", "4096", "-f", privateKeyPath, "-N", "")
+		sshCmd := exec.Command("ssh-keygen", "-t", "rsa", "-b", "4096", "-f", privateKeyPath, "-N", "", "-C", "")
 		sshCmd.Run()
 
 		pubKey, err := os.ReadFile(filepath.Join(sshDir, "pm.pub"))
@@ -187,31 +187,27 @@ func (gr *GitRemote) Push(ctx context.Context, msg ...string) error {
 func (gr *GitRemote) Pull(ctx context.Context) error {
 	utils.CreateDirIfNotExist(gr.LocalPath)
 
-	// _, _, repo, err := utils.ExtractGitInfo(gr.Url)
-	// if err != nil {
-	// 	return err
-	// }
-
 	auth, err := auth(gr.PrivateKeyPath, "")
 	if err != nil {
 		return fmt.Errorf("failed to create git auth credentials: %w", err)
 	}
 
 	var r *git.Repository
-	if !utils.IfDirExist(gr.LocalPath) {
+
+	r, err = git.PlainOpen(gr.LocalPath)
+	if err != nil && !errors.Is(err, git.ErrRepositoryNotExists) {
+		return err
+	}
+
+	if errors.Is(err, git.ErrRepositoryNotExists) {
 		_, err = git.PlainClone(config.GetString("local.path"), false, &git.CloneOptions{
 			URL:               config.GetString("remote.url"),
 			RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 			Auth:              auth,
 		})
-		if err != nil {
+		if err != nil && !errors.Is(err, transport.ErrEmptyRemoteRepository) {
 			return fmt.Errorf("failed to clone git repository: %w", err)
 		}
-	}
-
-	r, err = git.PlainOpen(gr.LocalPath)
-	if err != nil {
-		return err
 	}
 
 	// Get the working directory for the repository
@@ -224,7 +220,7 @@ func (gr *GitRemote) Pull(ctx context.Context) error {
 	if err := w.Pull(&git.PullOptions{
 		RemoteName: "origin",
 		Auth:       auth,
-	}); err != nil && !errors.Is(git.NoErrAlreadyUpToDate, err) {
+	}); err != nil && !errors.Is(git.NoErrAlreadyUpToDate, err) && !errors.Is(err, transport.ErrEmptyRemoteRepository) {
 		return fmt.Errorf("failed to pull latest changes from origin remote: %w", err)
 	}
 
