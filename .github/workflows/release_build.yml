@@ -9,8 +9,38 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  release-linux-binary:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install cross-compiler for linux/arm64
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: myapp
+          path: dist/*
+
+  release-darwin-binary:
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,11 +59,66 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
-          # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
-          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
 
       - name: Upload assets
         uses: actions/upload-artifact@v3
         with:
           name: myapp
-          path: myfolder/dist/*
+          path: dist/*
+
+  release-windows-binary:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          CGO_ENABLE: 1
+          GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: myapp
+          path: dist/*
+
+  # goreleaser:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v4
+
+  #     - name: Run GoReleaser
+  #       uses: goreleaser/goreleaser-action@v5
+  #       with:
+  #         # either 'goreleaser' (default) or 'goreleaser-pro'
+  #         distribution: goreleaser
+  #         version: latest
+  #         args: release --clean
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
+  #         # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
+  #         # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+
+  #     - name: Upload assets
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: myapp
+  #         path: myfolder/dist/*
