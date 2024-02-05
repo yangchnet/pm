@@ -8,6 +8,7 @@ import (
 	"github.com/yangchnet/pm/config"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 type SqliteStore struct {
@@ -15,7 +16,9 @@ type SqliteStore struct {
 }
 
 func NewSqliteStore(ctx context.Context) *SqliteStore {
-	db, err := gorm.Open(sqlite.Open(filepath.Join(config.GetString("local.path"), "passwd.db")), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(filepath.Join(config.GetString("local.path"), "passwd.db")), &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+	})
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -39,7 +42,7 @@ func (s *SqliteStore) Save(ctx context.Context, passwd *Passwd) error {
 func (s *SqliteStore) Get(ctx context.Context, name string) (*Passwd, error) {
 	var passwd *Passwd
 	if err := s.db.Model(&Passwd{}).Where("name = ?", name).First(&passwd).Error; err != nil {
-		return passwd, nil
+		return nil, err
 	}
 
 	return passwd, nil

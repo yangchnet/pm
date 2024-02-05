@@ -14,6 +14,10 @@ import (
 )
 
 func InitCmd() *cobra.Command {
+	var (
+		onlyLocal bool
+	)
+
 	var initCmd = &cobra.Command{
 		Use:   "init",
 		Short: "init config",
@@ -35,6 +39,10 @@ func InitCmd() *cobra.Command {
 			var remoteType string = "git"
 			if len(args) > 0 {
 				remoteType = args[0]
+			}
+
+			if onlyLocal {
+				remoteType = "empty"
 			}
 
 			remote, err := remote.NewRemote(cmd.Context(), remoteType, nil)
@@ -81,6 +89,8 @@ func InitCmd() *cobra.Command {
 			writeAutoCompletionScript(scriptPath)
 		},
 	}
+
+	initCmd.Flags().BoolVarP(&onlyLocal, "only-local", "", false, "only use local storage")
 
 	return initCmd
 }

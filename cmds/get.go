@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yangchnet/pm/config"
 	"github.com/yangchnet/pm/store"
+	"gorm.io/gorm"
 )
 
 func GetCmd() *cobra.Command {
@@ -39,6 +41,10 @@ func GetCmd() *cobra.Command {
 
 			passwd, err := service.store.Get(cmd.Context(), args[0])
 			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					fmt.Println("password not found")
+					os.Exit(1)
+				}
 				fmt.Println(err)
 				os.Exit(1)
 			}

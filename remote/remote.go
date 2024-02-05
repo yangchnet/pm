@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/yangchnet/pm/remote/empty"
 	gitremote "github.com/yangchnet/pm/remote/git"
 )
 
@@ -23,6 +24,8 @@ func NewRemote(ctx context.Context, remoteType string, remoteMap map[string]any)
 	switch remoteType {
 	case "git":
 		remote = gitremote.NewGitRemote(ctx, remoteMap)
+	case "empty":
+		remote = empty.NewEmptyRemote()
 	default:
 		return nil, fmt.Errorf("未知的remote类型: %s", remoteType)
 	}

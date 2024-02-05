@@ -17,6 +17,8 @@ func GenerateCmd() *cobra.Command {
 		account string
 		note    string
 		url     string
+		passwd  string
+		length  int32
 	)
 
 	var generateCmd = &cobra.Command{
@@ -27,7 +29,10 @@ func GenerateCmd() *cobra.Command {
 			config.InitConfig()
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			password := generatePassword(12)
+			password := passwd
+			if password == "" {
+				password = generatePassword(int(length))
+			}
 
 			primaryKey := GetPrimaryKey()
 
@@ -78,6 +83,10 @@ func GenerateCmd() *cobra.Command {
 	generateCmd.Flags().StringVarP(&note, "note", "n", "", "密码的备注信息")
 
 	generateCmd.Flags().StringVarP(&url, "url", "u", "", "相关的url")
+
+	generateCmd.Flags().StringVarP(&passwd, "passwd", "p", "", "已有的密码")
+
+	generateCmd.Flags().Int32VarP(&length, "length", "l", 12, "生成的密码长度")
 
 	return generateCmd
 }
