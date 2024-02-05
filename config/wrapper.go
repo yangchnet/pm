@@ -16,6 +16,10 @@ func GetStringMap(key string) map[string]any {
 	return c.GetStringMap(key)
 }
 
+func GetSlice(key string) []any {
+	return c.Get(key).([]any)
+}
+
 func GetStringMapString(key string) map[string]string {
 	return c.GetStringMapString(key)
 }

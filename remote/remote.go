@@ -4,57 +4,28 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/yangchnet/pm/config"
 	gitremote "github.com/yangchnet/pm/remote/git"
 )
 
 type Remote interface {
 	// Push 将本地的store文件推送到远端
-	Push(ctx context.Context) error
+	Push(ctx context.Context, msg ...string) error
 
-	// Pull 将远端的store文件拉取到本地
+	// Pull 将远端的store文件拉取到本地，当相关文件(夹)不存在时，应自动创建
 	Pull(ctx context.Context) error
 
-	// Init 初始化remote
-	Init(ctx context.Context) error
+	// Init 初始化remote，返回remote配置信息
+	Init(ctx context.Context) (string, error)
 }
 
-func NewRemote(ctx context.Context) (Remote, error) {
-	for name, _ := range config.GetStringMap("remote") {
-		switch name {
-		case "git":
-			return gitremote.NewGitRemote(
-				ctx,
-				config.GetString("local.path"),
-				&gitremote.GitRemoteConfig{
-					Name:           config.GetString("remote.git.name"),
-					Email:          config.GetString("remote.git.email"),
-					Url:            config.GetString("remote.git.url"),
-					PrivateKeyPath: config.GetString("remote.git.privateKeyPath"),
-					PublicKeyPath:  config.GetString("remote.git.publicKeyPath"),
-				},
-			)
-		}
+func NewRemote(ctx context.Context, remoteType string, remoteMap map[string]any) (Remote, error) {
+	var remote Remote
+	switch remoteType {
+	case "git":
+		remote = gitremote.NewGitRemote(ctx, remoteMap)
+	default:
+		return nil, fmt.Errorf("未知的remote类型: %s", remoteType)
 	}
 
-	return nil, fmt.Errorf("未配置remote")
+	return remote, nil
 }
-
-// func isGit(urlStr string) bool {
-// 	parsedUrl, err := url.Parse(urlStr)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return false
-// 	}
-
-// 	if parsedUrl.Scheme != "git" && parsedUrl.Scheme != "https" {
-// 		return false
-// 	}
-
-// 	// If the URL is an HTTPS URL, we also check if the path ends with .git
-// 	if parsedUrl.Scheme == "https" && !strings.HasSuffix(parsedUrl.Path, ".git") {
-// 		return false
-// 	}
-
-// 	return true
-// }

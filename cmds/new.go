@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -15,7 +14,6 @@ import (
 
 func GenerateCmd() *cobra.Command {
 	var (
-		name    string
 		account string
 		note    string
 		url     string
@@ -24,9 +22,11 @@ func GenerateCmd() *cobra.Command {
 	var generateCmd = &cobra.Command{
 		Use:   "new",
 		Short: "generate a new password for [name]",
-		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
+		Args:  cobra.ExactArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
 			config.InitConfig()
+		},
+		Run: func(cmd *cobra.Command, args []string) {
 			password := generatePassword(12)
 
 			primaryKey := GetPrimaryKey()
@@ -37,37 +37,47 @@ func GenerateCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			service, err := NewService(ctx)
+			service, err := NewService(cmd.Context())
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
 
 			passwd := store.Passwd{
-				Name:          name,
+				Name:          args[0],
 				Url:           url,
 				UserName:      account,
 				Note:          note,
 				CryptedPasswd: cryptedPasswd,
 			}
-			if err := service.store.Save(ctx, &passwd); err != nil {
+			if err := service.store.Save(cmd.Context(), &passwd); err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
 
 			clipboard.WriteAll(password)
 		},
+		PostRun: func(cmd *cobra.Command, args []string) {
+			service, err := NewService(cmd.Context())
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			msg := fmt.Sprintf("add password: %s", args[0])
+
+			if err := service.remote.Push(cmd.Context(), msg); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		},
 	}
 
-	generateCmd.Flags().StringVarP(&name, "name", "", "", "password unique name")
-	generateCmd.MarkFlagRequired("name")
+	generateCmd.Flags().StringVarP(&account, "account", "a", "", "账户名")
 
-	generateCmd.Flags().StringVarP(&account, "account", "", "", "账户名")
-	generateCmd.MarkFlagRequired("account")
+	generateCmd.Flags().StringVarP(&note, "note", "n", "", "密码的备注信息")
 
-	generateCmd.Flags().StringVarP(&note, "note", "", "", "备注")
-
-	generateCmd.Flags().StringVarP(&url, "url", "", "", "相关的url")
+	generateCmd.Flags().StringVarP(&url, "url", "u", "", "相关的url")
 
 	return generateCmd
 }

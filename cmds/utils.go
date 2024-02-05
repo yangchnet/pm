@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/yangchnet/pm/config"
+	"github.com/yangchnet/pm/utils"
 	"golang.org/x/term"
 )
 
@@ -25,13 +25,13 @@ func GetPrimaryKey() string {
 }
 
 func needPrimaryKeyInput() (string, bool) {
-	userKeyPath := config.GetString("userKeyPath")
+	userKeyPath := config.GetString("user_key_path")
 	_, err := os.Stat(userKeyPath)
 	if os.IsNotExist(err) {
 		return "", true
 	}
 
-	content, err := os.ReadFile(config.GetString("userKeyPath"))
+	content, err := os.ReadFile(config.GetString("user_key_path"))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -72,35 +72,17 @@ func inputAndSavePrimaryKey() string {
 }
 
 func savePrimaryKey(primaryKeyByte []byte) string {
-	filePath := config.GetString("userKeyPath")
+	userKeyPath := config.GetString("user_key_path")
 
-	// 检查文件路径是否存在
-	dir := filepath.Dir(filePath)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		// 如果文件路径不存在，创建它
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			panic(err)
-		}
-	}
+	utils.CreateDirIfNotExist(filepath.Dir(userKeyPath))
 
 	hash := sha256.Sum256(primaryKeyByte)
 	hashString := hex.EncodeToString(hash[:])
 
 	content := []byte(hashString + " " + strconv.FormatInt(time.Now().Unix(), 10))
-	if err := os.WriteFile(config.GetString("userKeyPath"), content, 0644); err != nil {
+	if err := os.WriteFile(userKeyPath, content, 0644); err != nil {
 		panic(err)
 	}
 
 	return hashString
-}
-
-func extractGitInfo(gitURL string) (string, string, string, error) {
-	re := regexp.MustCompile(`^git@(.*):(.*)/(.*).git$`)
-	matches := re.FindStringSubmatch(gitURL)
-
-	if len(matches) != 4 {
-		return "", "", "", fmt.Errorf("git url格式不对")
-	}
-
-	return matches[1], matches[2], matches[3], nil
 }

@@ -2,7 +2,9 @@ package cmds
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/yangchnet/pm/config"
 	"github.com/yangchnet/pm/remote"
 	"github.com/yangchnet/pm/store"
 )
@@ -13,7 +15,12 @@ type service struct {
 }
 
 func NewService(ctx context.Context) (*service, error) {
-	remote, err := remote.NewRemote(ctx)
+	remoteMap := config.GetStringMap("remote")
+	if len(remoteMap) <= 0 {
+		return nil, fmt.Errorf("remote not found")
+	}
+
+	remote, err := remote.NewRemote(ctx, remoteMap["type"].(string), remoteMap)
 	if err != nil {
 		return nil, err
 	}

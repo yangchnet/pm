@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"path/filepath"
+	"time"
 
 	"github.com/yangchnet/pm/config"
 	"gorm.io/driver/sqlite"
@@ -29,6 +30,8 @@ func NewSqliteStore(ctx context.Context) *SqliteStore {
 
 // Save 在使用cryptFunc对密码密文进行存储
 func (s *SqliteStore) Save(ctx context.Context, passwd *Passwd) error {
+	passwd.CreateTime = time.Now()
+	passwd.UpdateTime = time.Now()
 	return s.db.Save(passwd).Error
 }
 
