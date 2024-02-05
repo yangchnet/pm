@@ -17,5 +17,5 @@ builds:
       - amd64
 checksum:
   disable: true
-archive:
-  format: zip
+archives:
+  - format: zip

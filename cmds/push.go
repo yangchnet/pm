@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -10,21 +9,20 @@ import (
 )
 
 func PushCmd() *cobra.Command {
-
 	var pushCmd = &cobra.Command{
 		Use:   "push",
 		Short: "push passwd store to remote",
-		Run: func(cmd *cobra.Command, args []string) {
-			ctx := context.Background()
+		PreRun: func(cmd *cobra.Command, args []string) {
 			config.InitConfig()
-
-			service, err := NewService(ctx)
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			service, err := NewService(cmd.Context())
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
 
-			if err := service.remote.Push(ctx); err != nil {
+			if err := service.remote.Push(cmd.Context()); err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
@@ -32,5 +30,4 @@ func PushCmd() *cobra.Command {
 	}
 
 	return pushCmd
-
 }
