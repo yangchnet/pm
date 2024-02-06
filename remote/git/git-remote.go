@@ -200,7 +200,7 @@ func (gr *GitRemote) Pull(ctx context.Context) error {
 	}
 
 	if errors.Is(err, git.ErrRepositoryNotExists) {
-		_, err = git.PlainClone(config.GetString("local.path"), false, &git.CloneOptions{
+		r, err = git.PlainClone(config.GetString("local.path"), false, &git.CloneOptions{
 			URL:               config.GetString("remote.url"),
 			RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 			Auth:              auth,

@@ -120,6 +120,39 @@ func (s *FileStore) Delete(ctx context.Context, name string) error {
 	return os.Remove(filepath.Join(s.localPath, name+".passwd"))
 }
 
+// Update 更新一个记录
+func (s *FileStore) Update(ctx context.Context, name string, passwd *store.Passwd) error {
+	files, err := readAllPasswd(s.localPath)
+	if err != nil {
+		return err
+	}
+
+	path, ok := files[name+".passwd"]
+	if !ok {
+		return store.ErrNotFound
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	passwdByte, err := json.Marshal(passwd)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	encoded := base64.StdEncoding.EncodeToString(passwdByte)
+	_, err = f.WriteString(encoded)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func readAllPasswd(dir string) (map[string]string, error) {
 	files := make(map[string]string)
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

@@ -19,4 +19,7 @@ type Store interface {
 
 	// Delete 删除一个记录
 	Delete(ctx context.Context, name string) error
+
+	// Update 更新一个记录
+	Update(ctx context.Context, name string, passwd *Passwd) error
 }

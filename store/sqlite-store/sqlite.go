@@ -3,7 +3,6 @@ package sqlitestore
 import (
 	"context"
 	"path/filepath"
-	"time"
 
 	"github.com/yangchnet/pm/config"
 	"github.com/yangchnet/pm/store"
@@ -39,8 +38,6 @@ func (s *SqliteStore) Init(ctx context.Context) (string, error) {
 
 // Save 在使用cryptFunc对密码密文进行存储
 func (s *SqliteStore) Save(ctx context.Context, passwd *store.Passwd) error {
-	passwd.CreateTime = time.Now()
-	passwd.UpdateTime = time.Now()
 	return s.db.Save(passwd).Error
 }
 
@@ -70,4 +67,9 @@ func (s *SqliteStore) Delete(ctx context.Context, name string) error {
 		return err
 	}
 	return s.db.Delete(&passwd).Error
+}
+
+// Update 更新一个记录
+func (s *SqliteStore) Update(ctx context.Context, name string, passwd *store.Passwd) error {
+	return s.db.Model(&store.Passwd{}).Where("name = ?", name).Updates(passwd).Error
 }
