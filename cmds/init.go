@@ -9,13 +9,13 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
-	"github.com/yangchnet/pm/remote"
 	"github.com/yangchnet/pm/utils"
 )
 
 func InitCmd() *cobra.Command {
 	var (
-		onlyLocal bool
+		storeType  string
+		remoteType string
 	)
 
 	var initCmd = &cobra.Command{
@@ -36,16 +36,7 @@ func InitCmd() *cobra.Command {
 			utils.CreateDirIfNotExist(pmDir)    // 创建.pm主目录
 			utils.CreateDirIfNotExist(storeDir) // 创建存储目录
 
-			var remoteType string = "git"
-			if len(args) > 0 {
-				remoteType = args[0]
-			}
-
-			if onlyLocal {
-				remoteType = "empty"
-			}
-
-			remote, err := remote.NewRemote(cmd.Context(), remoteType, nil)
+			remote, err := NewRemote(cmd.Context(), remoteType, nil)
 			if err != nil {
 				fmt.Println("Error:", err)
 				os.Exit(1)
@@ -58,9 +49,22 @@ func InitCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
+			localStore, err := NewStore(cmd.Context(), storeType, nil)
+			if err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(1)
+			}
+
+			storeConfigStr, err := localStore.Init(cmd.Context())
+			if err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(1)
+			}
+
 			// 写入配置文件
 			params := map[string]string{
 				"remoteConfig": remoteConfigStr,
+				"storeConfig":  storeConfigStr,
 				"localPath":    filepath.Join(home, ".pm/store"),
 				"userKeyPath":  userKeyPath,
 			}
@@ -90,13 +94,17 @@ func InitCmd() *cobra.Command {
 		},
 	}
 
-	initCmd.Flags().BoolVarP(&onlyLocal, "only-local", "", false, "only use local storage")
+	initCmd.Flags().StringVarP(&storeType, "store", "s", "file", "store type: [file, sqlite], default file")
+
+	initCmd.Flags().StringVarP(&remoteType, "remote", "r", "empty", "remote type: [git, empty], default empty")
 
 	return initCmd
 }
 
 var confTmpl = `
 {{.remoteConfig}}
+
+{{.storeConfig}}
 
 local:
   path: {{.localPath}}

@@ -5,6 +5,9 @@ import (
 )
 
 type Store interface {
+	// Init 初始化存储
+	Init(ctx context.Context) (string, error)
+
 	// Save 在使用cryptFunc对密码密文进行存储
 	Save(ctx context.Context, passwd *Passwd) error
 

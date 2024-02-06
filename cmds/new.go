@@ -61,6 +61,7 @@ func GenerateCmd() *cobra.Command {
 			}
 
 			clipboard.WriteAll(password)
+			fmt.Println("密码已经复制到剪贴板")
 		},
 		PostRun: func(cmd *cobra.Command, args []string) {
 			service, err := NewService(cmd.Context())

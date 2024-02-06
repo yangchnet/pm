@@ -1,4 +1,4 @@
-package store
+package sqlitestore
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/yangchnet/pm/config"
+	"github.com/yangchnet/pm/store"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -24,24 +25,29 @@ func NewSqliteStore(ctx context.Context) *SqliteStore {
 	}
 
 	// 迁移 schema
-	db.AutoMigrate(&Passwd{})
+	db.AutoMigrate(&store.Passwd{})
 
 	return &SqliteStore{
 		db: db,
 	}
 }
 
+func (s *SqliteStore) Init(ctx context.Context) (string, error) {
+	return `store:
+  type: sqlite`, nil
+}
+
 // Save 在使用cryptFunc对密码密文进行存储
-func (s *SqliteStore) Save(ctx context.Context, passwd *Passwd) error {
+func (s *SqliteStore) Save(ctx context.Context, passwd *store.Passwd) error {
 	passwd.CreateTime = time.Now()
 	passwd.UpdateTime = time.Now()
 	return s.db.Save(passwd).Error
 }
 
 // Get 获取密码密文
-func (s *SqliteStore) Get(ctx context.Context, name string) (*Passwd, error) {
-	var passwd *Passwd
-	if err := s.db.Model(&Passwd{}).Where("name = ?", name).First(&passwd).Error; err != nil {
+func (s *SqliteStore) Get(ctx context.Context, name string) (*store.Passwd, error) {
+	var passwd *store.Passwd
+	if err := s.db.Model(&store.Passwd{}).Where("name = ?", name).First(&passwd).Error; err != nil {
 		return nil, err
 	}
 
@@ -51,7 +57,7 @@ func (s *SqliteStore) Get(ctx context.Context, name string) (*Passwd, error) {
 // SearchName 根据名称进行搜索并给出名称列表
 func (s *SqliteStore) SearchName(ctx context.Context, name string) ([]string, error) {
 	var names []string
-	if err := s.db.Model(&Passwd{}).Where("name LIKE ?", "%"+name+"%").Select("name").Scan(&names).Error; err != nil {
+	if err := s.db.Model(&store.Passwd{}).Where("name LIKE ?", "%"+name+"%").Select("name").Scan(&names).Error; err != nil {
 		return nil, err
 	}
 	return names, nil
@@ -59,7 +65,7 @@ func (s *SqliteStore) SearchName(ctx context.Context, name string) ([]string, er
 
 // Delete 删除一个记录
 func (s *SqliteStore) Delete(ctx context.Context, name string) error {
-	var passwd Passwd
+	var passwd store.Passwd
 	if err := s.db.Where("name = ?", name).First(&passwd).Error; err != nil {
 		return err
 	}

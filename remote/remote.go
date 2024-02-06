@@ -2,10 +2,6 @@ package remote
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/yangchnet/pm/remote/empty"
-	gitremote "github.com/yangchnet/pm/remote/git"
 )
 
 type Remote interface {
@@ -17,18 +13,4 @@ type Remote interface {
 
 	// Init 初始化remote，返回remote配置信息
 	Init(ctx context.Context) (string, error)
-}
-
-func NewRemote(ctx context.Context, remoteType string, remoteMap map[string]any) (Remote, error) {
-	var remote Remote
-	switch remoteType {
-	case "git":
-		remote = gitremote.NewGitRemote(ctx, remoteMap)
-	case "empty":
-		remote = empty.NewEmptyRemote()
-	default:
-		return nil, fmt.Errorf("未知的remote类型: %s", remoteType)
-	}
-
-	return remote, nil
 }
