@@ -70,10 +70,15 @@ func DelCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			nameList, err := service.store.SearchName(cmd.Context(), toComplete)
+			passwdList, err := service.store.SearchName(cmd.Context(), toComplete)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
+			}
+
+			nameList := make([]string, 0)
+			for _, passed := range passwdList {
+				nameList = append(nameList, passed.Name)
 			}
 			return nameList, cobra.ShellCompDirectiveKeepOrder
 		},

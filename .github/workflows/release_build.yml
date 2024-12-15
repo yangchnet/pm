@@ -20,6 +20,14 @@ jobs:
       - name: Install cross-compiler for linux/arm64
         run: sudo apt-get install -y gcc-aarch64-linux-gnu
 
+      - name: Set up git tag
+        uses: devops-actions/action-get-tag@v1.0.2
+        with:
+          strip_v: false
+          
+      - name: Replace __VERSION__ in cmds/root.go
+        run: sed -i "s/__VERSION__/${{ steps.get_tag.outputs.tag }}/" cmds/root.go
+
       - name: Set up Go
         uses: actions/setup-go@v4
 
@@ -28,7 +36,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --config .github/workflows/.goreleaser-for-linux.yml
+          args: release --skip=validate --config .github/workflows/.goreleaser-for-linux.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
 
@@ -48,6 +56,16 @@ jobs:
 
       - name: Set up Go
         uses: actions/setup-go@v4
+        with:
+          go-version: 1.23.1  # 指定 Go 版本
+        
+      - name: Set up git tag
+        uses: devops-actions/action-get-tag@v1.0.2
+        with:
+          strip_v: false
+          
+      - name: Replace __VERSION__ in cmds/root.go
+        run: sed -i '' "s/__VERSION__/${{ steps.get_tag.outputs.tag }}/" cmds/root.go
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
@@ -55,7 +73,7 @@ jobs:
           # either 'goreleaser' (default) or 'goreleaser-pro'
           distribution: goreleaser
           version: latest
-          args: release --config .github/workflows/.goreleaser-for-darwin.yml
+          args: release --skip=validate --config .github/workflows/.goreleaser-for-darwin.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
 
@@ -65,64 +83,3 @@ jobs:
           name: myapp
           path: dist/*
 
-  release-windows-binary:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
-          version: 12.2.0
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --config .github/workflows/.goreleaser-for-windows.yml
-        env:
-          CGO_ENABLE: 1
-          GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
-
-      - name: Upload assets
-        uses: actions/upload-artifact@v3
-        with:
-          name: myapp
-          path: dist/*
-
-  # goreleaser:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v4
-
-  #     - name: Run GoReleaser
-  #       uses: goreleaser/goreleaser-action@v5
-  #       with:
-  #         # either 'goreleaser' (default) or 'goreleaser-pro'
-  #         distribution: goreleaser
-  #         version: latest
-  #         args: release --clean
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GO_BUILD_TOKEN}}
-  #         # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
-  #         # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-
-  #     - name: Upload assets
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: myapp
-  #         path: myfolder/dist/*

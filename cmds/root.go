@@ -2,7 +2,10 @@ package cmds
 
 import "github.com/spf13/cobra"
 
-var RootCmd = cobra.Command{Use: "pm"}
+var RootCmd = cobra.Command{
+	Use:     "pm",
+	Version: "__VERSION__",
+}
 
 func init() {
 	RootCmd.AddCommand(GenerateCmd())
@@ -11,4 +14,6 @@ func init() {
 	RootCmd.AddCommand(PullCmd())
 	RootCmd.AddCommand(InitCmd())
 	RootCmd.AddCommand(DelCmd())
+	RootCmd.AddCommand(ListCmd())
+	RootCmd.AddCommand(UpdateCmd())
 }

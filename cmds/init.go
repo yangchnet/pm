@@ -67,6 +67,7 @@ func InitCmd() *cobra.Command {
 				"storeConfig":  storeConfigStr,
 				"localPath":    filepath.Join(home, ".pm/store"),
 				"userKeyPath":  userKeyPath,
+				"latency":      "24h",
 			}
 			tmpl, err := template.New("conf").Parse(confTmpl)
 			if err != nil {

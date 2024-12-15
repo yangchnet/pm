@@ -93,26 +93,36 @@ func (s *FileStore) Get(ctx context.Context, name string) (*store.Passwd, error)
 	return &passwd, nil
 }
 
-// SearchName 根据名称进行搜索并给出名称列表
-func (s *FileStore) SearchName(ctx context.Context, name string) ([]string, error) {
+// SearchName 根据名称进行搜索
+func (s *FileStore) SearchName(ctx context.Context, name string) ([]*store.Passwd, error) {
 	files, err := readAllPasswd(s.localPath)
 	if err != nil {
 		return nil, err
 	}
 
-	var names []string
-	for k, _ := range files {
+	var passwds []*store.Passwd
+	for k, path := range files {
 		list := strings.Split(k, ".")
 		if len(list) < 1 {
 			continue
 		}
 
 		if strings.Contains(strings.ToLower(list[0]), strings.ToLower(name)) {
-			names = append(names, list[0])
+			var passwd store.Passwd
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := json.Unmarshal(content, &passwd); err != nil {
+				return nil, err
+			}
+
+			passwds = append(passwds, &passwd)
 		}
 	}
 
-	return names, nil
+	return passwds, nil
 }
 
 // Delete 删除一个记录
