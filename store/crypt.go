@@ -8,6 +8,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
+	"os"
+
+	"github.com/yangchnet/pm/config"
+)
+
+var (
+	ErrPassword = errors.New("密码错误")
 )
 
 func createHash(key string) []byte {
@@ -34,7 +41,13 @@ func Encrypt(key string, text []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func Decrypt(key string, text []byte) ([]byte, error) {
+func Decrypt(key string, text []byte) (rawPasswd []byte, err error) {
+	defer func() {
+		userKeyPath := config.GetString("user_key_path")
+		if err != nil {
+			os.Remove(userKeyPath)
+		}
+	}()
 	keyHash := createHash(key)
 
 	block, err := aes.NewCipher(keyHash)
@@ -42,7 +55,7 @@ func Decrypt(key string, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	if len(text) < aes.BlockSize {
-		return nil, errors.New("ciphertext too short")
+		return nil, ErrPassword
 	}
 	iv := text[:aes.BlockSize]
 	text = text[aes.BlockSize:]
@@ -50,7 +63,7 @@ func Decrypt(key string, text []byte) ([]byte, error) {
 	cfb.XORKeyStream(text, text)
 	data, err := base64.StdEncoding.DecodeString(string(text))
 	if err != nil {
-		return nil, err
+		return nil, ErrPassword
 	}
 	return data, nil
 }

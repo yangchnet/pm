@@ -15,7 +15,7 @@ type Store interface {
 	Get(ctx context.Context, name string) (*Passwd, error)
 
 	// SearchName 根据名称进行搜索并给出名称列表
-	SearchName(ctx context.Context, name string) ([]string, error)
+	SearchName(ctx context.Context, name string) ([]*Passwd, error)
 
 	// Delete 删除一个记录
 	Delete(ctx context.Context, name string) error
