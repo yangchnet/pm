@@ -1,6 +1,9 @@
 before:
   hooks:
     - go mod tidy
+    - |
+      TAG=$(git tag --points-at HEAD)
+      sed -i "s/__VERSION__/$TAG/" cmds/root.go
 builds:
   - id: pm
     main: .
