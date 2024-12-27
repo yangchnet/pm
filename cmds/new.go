@@ -2,14 +2,13 @@ package cmds
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 	"github.com/yangchnet/pm/config"
 	"github.com/yangchnet/pm/store"
+	"github.com/yangchnet/pm/utils"
 )
 
 func GenerateCmd() *cobra.Command {
@@ -19,10 +18,14 @@ func GenerateCmd() *cobra.Command {
 		url     string
 		passwd  string
 		length  int32
+		lower   bool // 是否使用小写字母
+		upper   bool // 是否使用大写字母
+		number  bool // 是否使用数字
+		symbols bool // 是否使用特殊符号
 	)
 
 	var generateCmd = &cobra.Command{
-		Use:   "new",
+		Use:   "new <name> [options]",
 		Short: "generate a new password for [name]",
 		Args:  cobra.ExactArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -31,7 +34,7 @@ func GenerateCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			password := passwd
 			if password == "" {
-				password = generatePassword(int(length))
+				password = utils.GeneratePassword(int(length), lower, upper, number, symbols)
 			}
 
 			primaryKey := GetPrimaryKey()
@@ -79,49 +82,20 @@ func GenerateCmd() *cobra.Command {
 		},
 	}
 
-	generateCmd.Flags().StringVarP(&account, "account", "a", "", "账户名")
+	generateCmd.Flags().StringVar(&account, "account", "", "账户名")
 
-	generateCmd.Flags().StringVarP(&note, "note", "n", "", "密码的备注信息")
+	generateCmd.Flags().StringVar(&note, "note", "n", "密码的备注信息")
 
-	generateCmd.Flags().StringVarP(&url, "url", "u", "", "相关的url")
+	generateCmd.Flags().StringVar(&url, "url", "u", "相关的url")
 
-	generateCmd.Flags().StringVarP(&passwd, "passwd", "p", "", "已有的密码")
+	generateCmd.Flags().StringVar(&passwd, "passwd", "", "已有的密码")
 
-	generateCmd.Flags().Int32VarP(&length, "length", "l", 12, "生成的密码长度")
+	generateCmd.Flags().Int32Var(&length, "length", 12, "生成的密码长度")
+
+	generateCmd.Flags().BoolVarP(&lower, "lower", "l", false, "是否使用小写字母")
+	generateCmd.Flags().BoolVarP(&upper, "upper", "u", false, "是否使用大写字母")
+	generateCmd.Flags().BoolVarP(&number, "number", "n", false, "是否使用数字")
+	generateCmd.Flags().BoolVarP(&symbols, "symbols", "s", false, "是否使用特殊符号")
 
 	return generateCmd
-}
-
-const (
-	// 小写英文字母
-	characters = "abcdefghijklmnopqrstuvwxyz"
-
-	// 大写英文字母
-	upperCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-	// 数字
-	nums = "0123456789"
-
-	// 特殊符号
-	symbols = "~!@#$%^&*()_+`-={}|[]:<>?,./"
-)
-
-func generatePassword(length int) string {
-	charsets := shuffleString(characters + upperCharacters + nums + symbols)
-
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charsets[seededRand.Intn(len(charsets))]
-	}
-	return string(b)
-}
-
-func shuffleString(s string) string {
-	r := rand.New(rand.NewSource(time.Now().Unix()))
-	runes := []rune(s)
-	r.Shuffle(len(runes), func(i, j int) {
-		runes[i], runes[j] = runes[j], runes[i]
-	})
-	return string(runes)
 }

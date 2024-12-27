@@ -8,6 +8,7 @@ builds:
     binary: pm
     ldflags:
       - -w -s
+      - -extldflags "-static"
     tags:
       - release
     env:
@@ -23,3 +24,4 @@ builds:
         env:
           - CC_FOR_TARGET=gcc-aarch64-linux-gnu
           - CC=aarch64-linux-gnu-gcc
+

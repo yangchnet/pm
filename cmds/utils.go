@@ -54,7 +54,8 @@ func needPrimaryKeyInput() (string, bool) {
 	// 如果上一次输出已经超过了给定的延时，则必须再次输出密码
 	passwdLatency, err := time.ParseDuration(config.GetString("latency"))
 	if err != nil {
-		return "", false
+		fmt.Println(err)
+		os.Exit(1)
 	}
 	if time.Since(lastInputKeyTime) > passwdLatency {
 		_ = os.Remove(userKeyPath)
