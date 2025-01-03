@@ -111,10 +111,17 @@ func (s *FileStore) SearchName(ctx context.Context, name string) ([]*store.Passw
 			var passwd store.Passwd
 			content, err := os.ReadFile(path)
 			if err != nil {
+				fmt.Println(err)
 				return nil, err
 			}
 
-			if err := json.Unmarshal(content, &passwd); err != nil {
+			decodedBytes, err := base64.StdEncoding.DecodeString(string(content))
+			if err != nil {
+				fmt.Println("解码失败:", err)
+				os.Exit(1)
+			}
+
+			if err := json.Unmarshal(decodedBytes, &passwd); err != nil {
 				return nil, err
 			}
 
